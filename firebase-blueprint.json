@@ -1,0 +1,102 @@
+{
+  "entities": {
+    "RiskEvent": {
+      "title": "Risk Event",
+      "description": "Operational risk event information",
+      "type": "object",
+      "properties": {
+        "summary": { "type": "string" },
+        "idCode": { "type": "string" },
+        "description": { "type": "string" },
+        "detectingDivision": { "type": "string" },
+        "detectingDept": { "type": "string" },
+        "occurringDivision": { "type": "string" },
+        "occurringDept": { "type": "string" },
+        "dateOfDetection": { "type": "string", "format": "date" },
+        "dateOfOccurrence": { "type": "string", "format": "date" },
+        "lineManagerDetecting": { "type": "string" },
+        "coordinatorDetecting": { "type": "string" },
+        "lineManagerOccurring": { "type": "string" },
+        "coordinatorOccurring": { "type": "string" },
+        "ormStaff": { "type": "string" },
+        "rootCause": { "type": "string" },
+        "riskType": { "type": "string" },
+        "eventType": { "type": "string" },
+        "classificationOfLoss": { "type": "string" },
+        "lossAmount": { "type": "number" },
+        "additionalExpense": { "type": "number" },
+        "recoveryInsurance": { "type": "number" },
+        "recoveryStaff": { "type": "number" },
+        "recoveryOther": { "type": "number" },
+        "netLoss": { "type": "number" },
+        "likelihood": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "impact": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "riskLevel": { "type": "string", "enum": ["High", "Medium", "Low"] },
+        "criticalRisk": { "type": "boolean" },
+        "comments": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date" },
+        "overdue": { "type": "boolean" },
+        "contactInformation": { "type": "string" },
+        "isApproved": { "type": "boolean" },
+        "extendingDueDate": { "type": "string", "format": "date" },
+        "extendingRequestCount": { "type": "integer" },
+        "headOfDivision": { "type": "string" },
+        "coordinatorOfDivision": { "type": "string" },
+        "completionDate": { "type": "string", "format": "date" },
+        "status": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["summary", "detectingDivision", "occurringDivision", "dateOfDetection", "status"]
+    },
+    "MitigationAction": {
+      "title": "Mitigation Action",
+      "description": "Action plan to handle risk events",
+      "type": "object",
+      "properties": {
+        "riskEventId": { "type": "string" },
+        "summary": { "type": "string" },
+        "actionType": { "type": "string" },
+        "description": { "type": "string" },
+        "divisionInCharge": { "type": "string" },
+        "supportingUnits": { "type": "array", "items": { "type": "string" } },
+        "dueDate": { "type": "string", "format": "date" },
+        "implementationPlan": { "type": "string" },
+        "completeDate": { "type": "string", "format": "date" },
+        "actualStatus": { "type": "string", "enum": ["completed", "in progress", "deleted"] },
+        "isOverDue": { "type": "boolean" },
+        "comments": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["riskEventId", "summary", "actionType", "dueDate", "actualStatus"]
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "User roles and information",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["Coordinator", "Line Manager", "ORM Staff", "ORM Leader", "ORMD Header", "Head of Division"] },
+        "division": { "type": "string" },
+        "department": { "type": "string" }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/riskEvents": {
+      "schema": "RiskEvent",
+      "description": "Collection of operational risk events"
+    },
+    "/mitigationActions": {
+      "schema": "MitigationAction",
+      "description": "Collection of mitigation actions associated with risk events"
+    },
+    "/users": {
+      "schema": "User",
+      "description": "User profiles and roles"
+    }
+  }
+}

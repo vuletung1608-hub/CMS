@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Fields: email, displayName, role, division, department
+    //
+    // Collection: riskEvents
+    // Fields: summary, idCode, description, detectingDivision, occurringDivision, dateOfDetection, status, createdBy, createdAt, ...
+    //
+    // Collection: mitigationActions
+    // Fields: riskEventId, summary, actionType, description, divisionInCharge, actualStatus, createdBy, createdAt, ...
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && getUserData().role == role;
+    }
+
+    function isORMDHeader() {
+      return hasRole('ORMD Header');
+    }
+
+    function isORMLeader() {
+      return hasRole('ORM Leader');
+    }
+
+    function isORMStaff() {
+      return hasRole('ORM Staff');
+    }
+
+    function isCoordinator() {
+      return hasRole('Coordinator');
+    }
+
+    function isOccurringCoordinator() {
+      return hasRole('Occurring Coordinator');
+    }
+
+    function isLineManager() {
+      return hasRole('Line Manager');
+    }
+
+    function isHeadOfDivision() {
+      return hasRole('Head of Division');
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (getUserData().role == 'admin' ||
+          (request.auth.token.email == "vuletung1608@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.email is string &&
+             data.role in ['Coordinator', 'Occurring Coordinator', 'Line Manager', 'ORM Staff', 'ORM Leader', 'ORMD Header', 'Head of Division', 'admin'];
+    }
+
+    function isValidRiskEvent(data) {
+      return data.summary is string && data.summary.size() < 1000 &&
+             data.status is string &&
+             data.detectingDivision is string &&
+             data.occurringDivision is string;
+    }
+
+    function isValidMitigationAction(data) {
+      return data.summary is string && data.summary.size() < 1000 &&
+             data.riskEventId is string &&
+             data.actualStatus is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      // Allow role change for testing/admin
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+    }
+
+    match /riskEvents/{eventId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidRiskEvent(request.resource.data);
+      allow update: if isAuthenticated() && isValidRiskEvent(request.resource.data);
+      allow delete: if isAdmin() || isORMDHeader();
+    }
+
+    match /mitigationActions/{actionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidMitigationAction(request.resource.data);
+      allow update: if isAuthenticated() && isValidMitigationAction(request.resource.data);
+      allow delete: if isORMDHeader();
+    }
+  }
+}
